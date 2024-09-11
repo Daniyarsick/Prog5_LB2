@@ -9,36 +9,33 @@ class QueryError(Exception):
 
 def get_weather_data(place, api_key=None):
     if place == '' or api_key is None:
-        return # выходим из функции (возвращаем None), если не указан город или не указан API-ключ
+        return
 
     try:
         res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={place}&appid={api_key}')
-        # получаем объект запроса
 
-        res_data = res.json() # получаем JSON
+        res_data = res.json()
 
         if res_data['cod'] != 200:
             raise QueryError(res_data['message'])
-            # поднимаем исключение, если не получили информацию (должен быть код ответа 200)
-            # например, не найден город, или указан неправильный API-ключ
 
-        data = dict() # создаём пустой словарь
-        # и заполняем его данными
+
+        data = dict()
         data['name'] = res_data['name']
         data['country'] = res_data['sys']['country']
         data['coord'] = res_data['coord']
-        # timezone - в секундах от UTC, переводим в часы
+
         ts = res_data['timezone'] // 3600
-        if ts > 0: # и делаем из этого строку UTC+(число) или UTC-(число)
+        if ts > 0:
             timezone_str = f'UTC+{ts}'
         else:
             timezone_str = f'UTC{ts}'
         data['timezone'] = timezone_str
         temp = res_data['main']['feels_like']
-        temp_c = round(temp - 273.15, 2) # переводим температуру в градусы Цельсия
+        temp_c = round(temp - 273.15, 2)
         data['feels_like'] = temp_c
 
-        json_data = json.dumps(data) # преобразуем словaрь в JSON
+        json_data = json.dumps(data)
         return json_data
 
     except QueryError as e:
